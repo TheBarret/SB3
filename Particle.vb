@@ -114,7 +114,7 @@ Public MustInherit Class Particle
                 ' (To work out the total force applied you can divide the total impulse by the last frame's fixedDeltaTime)
                 Dim relativeVelocity As Vector2 = Me.Velocity - other.Velocity
                 Dim speedAlongNormal As Single = Vector2.Dot(relativeVelocity, normal)
-                ' The balls are moving apart or already colliding
+                ' The particle are moving apart or already colliding
                 If speedAlongNormal > 0F Then Exit Sub
                 Dim restitution As Single = (Me.Restitution + other.Restitution) * 0.5F
                 Dim impulseScalar As Single = -(1 + restitution) * speedAlongNormal / (1 / Me.Mass + 1 / other.Mass)
