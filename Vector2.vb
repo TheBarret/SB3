@@ -28,12 +28,6 @@ Public Class Vector2
         End If
     End Sub
 
-    Public Function Rotate(radians As Single) As Vector2
-        Dim cosAngle As Double = Math.Cos(radians)
-        Dim sinAngle As Double = Math.Sin(radians)
-        Return New Vector2(cosAngle * Me.X - sinAngle * Me.Y, sinAngle * Me.X + cosAngle * Me.Y)
-    End Function
-
     Public Function Reflect(norm As Vector2) As Vector2
         Return Me - 2 * Vector2.Dot(Me, norm) * norm
     End Function
@@ -82,11 +76,24 @@ Public Class Vector2
         Return New Vector2(1, 1)
     End Function
 
-    Public Shared Function RotatedBy(vector As Vector2, radians As Single) As Vector2
+    Public Shared Function RotateByRadians(vector As Vector2, radians As Single) As Vector2
         Return New Vector2(
         vector.X * Math.Cos(radians) - vector.Y * Math.Sin(radians),
         vector.X * Math.Sin(radians) + vector.Y * Math.Cos(radians))
     End Function
+
+    Public Shared Function RotateByDegrees(direction As Vector2, degrees As Single) As Vector2
+        Dim angle As Single = CSng(Math.Atan2(direction.Y, direction.X))
+        angle += Vector2.DegreesToRadians(degrees)
+        Return New Vector2(CSng(Math.Cos(angle)), CSng(Math.Sin(angle)))
+    End Function
+
+    Public Function Rotate(radians As Single) As Vector2
+        Dim cosAngle As Double = Math.Cos(radians)
+        Dim sinAngle As Double = Math.Sin(radians)
+        Return New Vector2(cosAngle * Me.X - sinAngle * Me.Y, sinAngle * Me.X + cosAngle * Me.Y)
+    End Function
+
 
     Public Shared Function Clamp(v As Single, min As Single, max As Single) As Single
         Return Math.Max(min, Math.Min(max, v))
@@ -104,11 +111,14 @@ Public Class Vector2
         Return New Vector2(value.X * invNorm, value.Y * invNorm)
     End Function
 
+    Public Shared Function DegreesToRadians(degrees As Single) As Single
+        Return degrees * Math.PI / 180.0F
+    End Function
+
     Public Overrides Function ToString() As String
         Return String.Format("{0}", Math.Round(Me.Length, 2))
     End Function
 #End Region
-
 #Region "Properties"
     Public Property Width As Single
         Get
@@ -118,7 +128,6 @@ Public Class Vector2
             Me.X = value
         End Set
     End Property
-
     Public Property Height As Single
         Get
             Return Me.Y
@@ -127,7 +136,6 @@ Public Class Vector2
             Me.Y = value
         End Set
     End Property
-
     Public ReadOnly Property IsNull As Boolean
         Get
             Return Me.X = 0 And Me.Y = 0
@@ -153,8 +161,6 @@ Public Class Vector2
             Return New Vector2(Me.X / 2, Me.Y / 2)
         End Get
     End Property
-    Public ReadOnly Property Negative As Vector2
-
     Public ReadOnly Property Heading() As Vector2
         Get
             Return Vector2.Normalize(Me)
@@ -171,9 +177,7 @@ Public Class Vector2
         End Get
     End Property
 #End Region
-
 #Region "Operators"
-
     Public Shared Operator +(v As Vector2, v2 As Vector2) As Vector2
         Return New Vector2(v.X + v2.X, v.Y + v2.Y)
     End Operator

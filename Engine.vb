@@ -1,4 +1,6 @@
-﻿Public Class Engine
+﻿Imports SB3.Bonding
+
+Public Class Engine
     Public Property Rows As Integer
     Public Property Columns As Integer
     Public Property Margin As Integer
@@ -6,6 +8,7 @@
     Public Property Font As Font
     Public Property Bounds As Rectangle
     Public Property Nodes As List(Of Node)
+    Public Property Bonds As List(Of Bond)
     Public Property PInput As Queue(Of Particle)
     Public Property DOuput As Queue(Of Particle)
     Public Property Particles As List(Of Particle)
@@ -13,6 +16,7 @@
     Sub New(bounds As Rectangle, margin As Integer, width As Integer, height As Integer)
         Me.Lock = New Object
         Me.Bounds = bounds
+        Me.Bonds = New List(Of Bond)
         Me.Font = New Font("Consolas", 8)
         Me.PInput = New Queue(Of Particle)
         Me.DOuput = New Queue(Of Particle)
@@ -37,7 +41,7 @@
     End Sub
 
     Public Sub Randomize()
-        Static cap As Single = 25
+        Static cap As Single = Engine.RFloat(5, 100)
         SyncLock Me.Particles
             For i As Integer = 1 To 50
                 Dim x As Single = Engine.Randomizer.Next(100, Me.Bounds.Width - 50)
@@ -65,6 +69,9 @@
 
     Public Sub Draw(g As Graphics)
         Dim buffer As List(Of Particle) = Me.Particles
+        For Each b As Bond In Me.Bonds
+            b.Draw(g, b.Top.GetTint)
+        Next
         For Each b As Particle In buffer
             b.Draw(Me, g)
         Next
@@ -75,15 +82,18 @@
         For Each b As Particle In buffer
             b.Update(Me, dt)
         Next
+        For Each b As Bond In Me.Bonds
+            b.Update(dt)
+        Next
     End Sub
 
     Private Sub UpdateQueue()
-        If (Me.Pinput.Any) Then
+        If (Me.PInput.Any) Then
             Do
                 SyncLock Me.Particles
-                    Me.Particles.Add(Me.Pinput.Dequeue)
+                    Me.Particles.Add(Me.PInput.Dequeue)
                 End SyncLock
-            Loop While Me.Pinput.Any
+            Loop While Me.PInput.Any
         End If
         If (Me.DOuput.Any) Then
             Do
@@ -112,10 +122,25 @@
         End SyncLock
     End Function
 
+    Public Function GetLeader(p As Particle) As Particle
+        Dim group = Me.Bonds.
+                            Where(Function(x) x.Top Is p Or x.Bottom Is p).
+                            Select(Function(y) y.GetByWeight).
+                            OrderBy(Function(z) z.Mass).
+                            Where(Function(i) i IsNot p).
+                            Distinct()
+        If (group.Any) Then Return group.Last Else Return p
+    End Function
+
+    Public ReadOnly Property HasBonded(p As Particle) As Boolean
+        Get
+            Return Me.Bonds.Any(Function(x) x.Top Is p Or x.Bottom Is p)
+        End Get
+    End Property
+
     Public Shared Function RRange(min As Single, max As Single) As Single
         Return min + CSng(Engine.Randomizer.NextDouble) * (max - min)
     End Function
-
 
     Public Shared Function RFloat(minValue As Single, maxValue As Single) As Single
         Return CSng((maxValue - minValue) * Engine.Randomizer.NextDouble) + minValue

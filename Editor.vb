@@ -1,5 +1,5 @@
 ﻿Public Class Editor
-    Private Const FRAMERATE As Integer = 30
+    Private Const FRAMERATE As Integer = 16
     Public Property Frame As Double
     Public Property Engine As Engine
 

@@ -74,10 +74,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Boid.vb" />
-    <Compile Include="Bond.vb" />
+    <Compile Include="Bonding\Bond.vb" />
     <Compile Include="Bonding\Binder.vb" />
-    <Compile Include="Incident.vb" />
-    <Compile Include="Navigation.vb" />
     <Compile Include="Particle.vb" />
     <Compile Include="Cardinal.vb" />
     <Compile Include="Editor.vb">
@@ -106,6 +104,7 @@
     </Compile>
     <Compile Include="Node.vb" />
     <Compile Include="Ray.vb" />
+    <Compile Include="Toolkit.vb" />
     <Compile Include="Vector2.vb" />
   </ItemGroup>
   <ItemGroup>

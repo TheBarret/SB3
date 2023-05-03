@@ -1,12 +1,11 @@
 ﻿Public Class Ray
     Public Property Length As Single
-    Public Property Center As Vector2
-    Public Property Sensor As Vector2
+    Public Property Particle As Particle
+    Public Property Endpoint As Vector2
 
-    Sub New(center As Vector2, endpoint As Vector2, length As Single)
-        Me.Center = center
-        Me.Sensor = endpoint
+    Sub New(p As Particle, endpoint As Vector2, length As Single)
+        Me.Particle = p
         Me.Length = length
+        Me.Endpoint = endpoint
     End Sub
-
 End Class
