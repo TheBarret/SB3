@@ -8,24 +8,24 @@ Public Class Engine
     Public Property Font As Font
     Public Property Bounds As Rectangle
     Public Property Nodes As List(Of Node)
-    Public Property Bonds As List(Of Bond)
+    Public Property Quadtree As Quadtree
     Public Property PInput As Queue(Of Particle)
     Public Property DOuput As Queue(Of Particle)
     Public Property Particles As List(Of Particle)
 
     Sub New(bounds As Rectangle, margin As Integer, width As Integer, height As Integer)
+        Me.Quadtree = New Quadtree(0, bounds)
         Me.Lock = New Object
         Me.Bounds = bounds
-        Me.Bonds = New List(Of Bond)
         Me.Font = New Font("Consolas", 8)
         Me.PInput = New Queue(Of Particle)
         Me.DOuput = New Queue(Of Particle)
         Me.Particles = New List(Of Particle)
-        Me.CreateNodes(margin, width, height)
+        Me.Intitialize(margin, width, height)
         Me.Randomize()
     End Sub
 
-    Public Sub CreateNodes(margin As Integer, columns As Integer, rows As Integer)
+    Public Sub Intitialize(margin As Integer, columns As Integer, rows As Integer)
         Me.Margin = margin
         Me.Rows = rows
         Me.Columns = columns
@@ -44,8 +44,8 @@ Public Class Engine
         Static cap As Single = Engine.RFloat(5, 100)
         SyncLock Me.Particles
             For i As Integer = 1 To 50
-                Dim x As Single = Engine.Randomizer.Next(100, Me.Bounds.Width - 50)
-                Dim y As Single = Engine.Randomizer.Next(100, Me.Bounds.Height - 50)
+                Dim x As Single = Engine.Randomizer.Next(300, Me.Bounds.Width - 50)
+                Dim y As Single = Engine.Randomizer.Next(300, Me.Bounds.Height - 50)
                 Me.Particles.Add(New Boid(New Vector2(x, y)))
                 Me.Particles.Last.AddForce(New Vector2(Engine.Randomizer.Next(-cap, cap), Engine.Randomizer.Next(-cap, cap)))
             Next
@@ -62,19 +62,30 @@ Public Class Engine
         Return False
     End Function
 
+    Public Function GetQuadrant(p As Particle) As HashSet(Of Particle)
+        Dim result As New HashSet(Of Particle)
+        Dim quadrant As HashSet(Of Particle) = Me.Quadtree.GetEntities(p)
+        If (quadrant.Count > 0) Then
+            result.UnionWith(quadrant)
+            result.Remove(p)
+        End If
+        Return result
+    End Function
+
     Public Sub Update(dt As Single)
+        Me.Quadtree.Prerender(Me.Particles)
         Me.UpdateQueue()
         Me.UpdateParticles(dt)
     End Sub
 
     Public Sub Draw(g As Graphics)
+        Me.Quadtree.Draw(g)
         Dim buffer As List(Of Particle) = Me.Particles
-        For Each b As Bond In Me.Bonds
-            b.Draw(g, b.Top.GetTint)
-        Next
         For Each b As Particle In buffer
             b.Draw(Me, g)
         Next
+        g.DrawString(Me.Quadtree.ToString, Me.Font, Brushes.Black, 10, 10)
+        Me.Quadtree.Cleanup()
     End Sub
 
     Private Sub UpdateParticles(dt As Single)
@@ -82,26 +93,20 @@ Public Class Engine
         For Each b As Particle In buffer
             b.Update(Me, dt)
         Next
-        For Each b As Bond In Me.Bonds
-            b.Update(dt)
-        Next
     End Sub
 
     Private Sub UpdateQueue()
-        If (Me.PInput.Any) Then
-            Do
-                SyncLock Me.Particles
-                    Me.Particles.Add(Me.PInput.Dequeue)
-                End SyncLock
-            Loop While Me.PInput.Any
-        End If
-        If (Me.DOuput.Any) Then
-            Do
-                SyncLock Me.Particles
-                    Me.Particles.Remove(Me.DOuput.Dequeue)
-                End SyncLock
-            Loop While Me.DOuput.Any
-        End If
+        If (Me.PInput.Count = 0 And Me.DOuput.Count = 0) Then Return
+        Do While Me.PInput.Count > 0
+            SyncLock Me.Particles
+                Me.Particles.Add(Me.PInput.Dequeue)
+            End SyncLock
+        Loop
+        Do While Me.DOuput.Count > 0
+            SyncLock Me.Particles
+                Me.Particles.Remove(Me.DOuput.Dequeue)
+            End SyncLock
+        Loop
     End Sub
 
     Private Function Create() As List(Of Node)
@@ -114,29 +119,13 @@ Public Class Engine
                 For c As Integer = 0 To Me.Columns - 1
                     Dim x As Integer = Me.Margin + c * width
                     Dim y As Integer = Me.Margin + r * height
-                    nodes.Add(New Node(counter, r, c, x, y, width, height))
+                    nodes.Add(New Node(x, y, width, height))
                     counter += 1
                 Next
             Next
             Return nodes
         End SyncLock
     End Function
-
-    Public Function GetLeader(p As Particle) As Particle
-        Dim group = Me.Bonds.
-                            Where(Function(x) x.Top Is p Or x.Bottom Is p).
-                            Select(Function(y) y.GetByWeight).
-                            OrderBy(Function(z) z.Mass).
-                            Where(Function(i) i IsNot p).
-                            Distinct()
-        If (group.Any) Then Return group.Last Else Return p
-    End Function
-
-    Public ReadOnly Property HasBonded(p As Particle) As Boolean
-        Get
-            Return Me.Bonds.Any(Function(x) x.Top Is p Or x.Bottom Is p)
-        End Get
-    End Property
 
     Public Shared Function RRange(min As Single, max As Single) As Single
         Return min + CSng(Engine.Randomizer.NextDouble) * (max - min)

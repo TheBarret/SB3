@@ -74,8 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Boid.vb" />
-    <Compile Include="Bonding\Bond.vb" />
-    <Compile Include="Bonding\Binder.vb" />
+    <Compile Include="Spring.vb" />
     <Compile Include="Particle.vb" />
     <Compile Include="Cardinal.vb" />
     <Compile Include="Editor.vb">
@@ -103,8 +102,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Node.vb" />
+    <Compile Include="Quadtree.vb" />
+    <Compile Include="Radar.vb" />
     <Compile Include="Ray.vb" />
-    <Compile Include="Toolkit.vb" />
     <Compile Include="Vector2.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -130,5 +130,6 @@
     </None>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
